@@ -3,8 +3,6 @@ using JamesWoods.Service.Dummy;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 
 namespace JamesWoods.Api.Controllers
@@ -41,18 +39,40 @@ namespace JamesWoods.Api.Controllers
         [Route("")]
         public IHttpActionResult CreateStudent(Student student)
         {
-            if (student == null)
+            if (student != null)
             {
-                return BadRequest("Felaktig inmatning");
+                if (ModelState.IsValid)
+                {
+                    return Content(HttpStatusCode.Created, $"{student.FirstName} är skapad");
+                    //allStudents.Add(student); Eller nåt om du inte hade använt IEnumerable
+                }
             }
+            return BadRequest("Felaktig inmatning");
+        }
 
-            if (student.FirstName == null)
+        [Route("{StudentId:int}")]
+        [HttpPut, HttpPatch]
+        public IHttpActionResult UpdateStudent(int studentId, Student _student)
+        {
+            var oneStudent = allStudents.Where(student => student.Id == studentId).FirstOrDefault();
+            if (_student != null && oneStudent != null)
             {
-                return BadRequest("Felaktig inmatning, studenter måste ha ett förnamn");
-            }
+                if (ModelState.IsValid)
+                {
+                    if (_student.FirstName == "Stewie")
+                    {
+                        return Content(HttpStatusCode.Forbidden, $"{_student.FirstName} får inte uppdateras!");
+                    }
 
-            //allStudents.Add(student); Eller nåt om du inte hade använt IEnumerable
-            return Content(HttpStatusCode.Created, $"{student.FirstName} är skapad");
+                    oneStudent.FirstName = _student.FirstName;
+                    oneStudent.LastName = _student.LastName;
+                    oneStudent.Email = _student.Email;
+                    oneStudent.Address = _student.Address;
+                    oneStudent.AttendToCourses = _student.AttendToCourses;
+                    return Content(HttpStatusCode.Created, $"{_student.FirstName} är uppdaterad!");
+                }
+            }
+            return BadRequest("Felaktig uppdatering");
         }
 
         [Route("{StudentId:int}")]
@@ -65,6 +85,7 @@ namespace JamesWoods.Api.Controllers
             {
                 return Content(HttpStatusCode.Forbidden, "Studenten finns inte");
             }
+            // Delete student
             return Content(HttpStatusCode.OK, "Studenten borttagen!");
         }
     }
